@@ -43,30 +43,26 @@ In the test notebook (`notebooks/Test.ipynb`) this can be tested via.
 ## 2. Model Overview
 
 ### 2.1 Roller Pump Compartment
-
 The roller pump converts a time-varying shaft speed **RPM(t)** into an outlet-flow waveform  
 via:
 
-\[
-Q_\mathrm{out}(t) = Q_\mathrm{nom}(\omega(t)) + \omega(t) \sum_{k=1}^{N_r} p(\varphi(t)-\varphi_k),
-\]
+Q_out(t) = Q_nom(ω(t)) + ω(t) * Σ_k p(φ(t) - φ_k)
+
 
 where:
 
-- \( \omega(t) = 2\pi/60 \cdot \text{RPM}(t) \),
-- \(Q_\mathrm{nom}\) is conveyor flow in a non-occluded segment,
-- \(p(\psi)\) is the geometry-derived **pulsatile displacement** of a roller,
-- \(N_r\) is the number of rollers,
-- \(\varphi(t)\) is the shaft angle.
+- ω(t) = 2π/60 * RPM(t) is the angular speed,
+- Q_nom is the nominal (conveyor) flow in the non-occluded tube segment,
+- p(ψ) is the geometry-derived pulsatile displacement of each roller,
+- Nr is the number of rollers,
+- φ(t) is the instantaneous shaft angle.
 
 The nominal flow is:
 
-\[
-Q_\mathrm{nom}(t) =
-\pi\left(\frac{d_i}{2}\right)^2 \omega(t)(r_b - d_o/2) \, n_{\text{occ}} / 1000,
-\]
+Q_nom(t) =
+π * (d_i/2)^2 * ω(t) * (r_b – d_o/2) * n_occ / 1000
 
-where \(n_\mathrm{occ} \in [0,1]\) is the occlusion factor.  
+where n_occ ∈ [0,1] is the occlusion factor.
 The pulsatile component is computed from tube geometry, indentation depth, and residual lumen area.
 
 ### 2.2 Circulatory Compartments
@@ -74,70 +70,59 @@ The pulsatile component is computed from tube geometry, indentation depth, and r
 The cardiovascular and cerebrovascular systems are modelled using a **lumped-parameter Windkessel analogue**, including:
 
 #### Aortic compartment
-- Proximal compliance \(C_{a,1}\)
-- Distal compliance \(C_{a,2}\)
-- Aortic resistance \(R_a\)
-- Inertance \(L_a\)
+Contains:
+- proximal compliance Ca1
+- distal compliance Ca2
+- aortic resistance Ra
+- inertance La
 
-These generate proximal \(V_{a,1}\) and distal \(V_{a,2}\) pressures (the latter representing **ABP**).
+These generate proximal (Va1) and distal (Va2) aortic pressures, where Va2 represents arterial blood pressure (ABP).
 
 #### Systemic compartment
-All non-cerebral vascular beds lumped into a resistance \(R_s\).  
-Because the systemic and cerebral branches are in parallel between \(V_{a,2}\) and venous pressure \(V_v\), their relative impedance determines the flow split.
+All non-cerebral systemic vessels are lumped into a single resistance Rs.
+Because the systemic and cerebral beds are in parallel between Va2 and venous pressure Vv, their relative impedance determines the flow split.
 
 #### Cerebral compartment
 Represents the MCA and pial circulation:
+- proximal resistance Rc1
+- distal resistance Rc2(t) (time-varying via CA)
+- compliance Cc
+- inertance Lc
 
-- Proximal resistance \(R_{c,1}\)
-- Distal resistance \(R_{c,2}(t)\)
-- Compliance \(C_c\)
-- Inertance \(L_c\)
-
-Flow through \(R_{c,1}\) corresponds to **CBF** under the assumption of constant MCA diameter.
+Flow through Rc1 corresponds to CBF, assuming constant MCA diameter.
 
 #### Venous compartment
-A compliant CVP reservoir with:
+A compliant venous reservoir:
+- compliance Cv
+- drainage resistance R_drain
 
-- Compliance \(C_v\)
-- Drainage resistance \(R_\text{drain}\)
+This produces a simulated central venous pressure Vv representing CVP.
 
 ### 2.3 Cerebral Autoregulation (CA)
 
-CA adjusts the distal cerebrovascular resistance \(R_{c,2}(t)\) based on mean arterial pressure.
+CA adjusts the distal cerebrovascular resistance (pial) Rc2(t) in response to mean arterial pressure.
 
 1. **Mean ABP** is computed via:
 
-\[
-\frac{d \overline{V_{a,2}}}{dt}
-= \frac{V_{a,2}(t)-\overline{V_{a,2}}}{\tau_\text{mean}}.
-\]
+d(Va2_mean)/dt = ( Va2(t) – Va2_mean ) / tau_mean
 
 2. **Target resistance**:
 
-\[
-R_\text{target}(t)
-= r_\text{set}\left[1 + S\big(\overline{V_{a,2}} - \mathrm{ABP}_\text{set}\big)\right].
-\]
+R_target(t) = r_set * [ 1 + S * ( Va2_mean – ABP_set ) ]
 
 3. **Dynamic response**:
 
-\[
-\frac{dR_{c,2}}{dt}
-= \frac{R_\text{target} - R_{c,2}}{\tau_r}.
-\]
+dRc2/dt = ( R_target – Rc2 ) / tau_r
 
 4. **Physiological bounds**:
 
-\[
-R_{c,2}(t)
-\in [r_\text{set} f_\text{min},\; r_\text{set} f_\text{max}].
-\]
+Rc2(t) ∈ [ r_set * f_min ,  r_set * f_max ]
 
 Within this range CBF remains stable; outside it becomes pressure-passive.
 
 ---
 
-## 3. Installation
+## 3. Import model
 
 ### 3.1 Requirements
 
@@ -149,15 +134,9 @@ scipy
 matplotlib
 ```
 
-### 3.2 Local installation
+### 3.2 Local import
 
-Option 1 – editable install from the project root:
-
-```bash
-pip install -e .
-```
-
-Option 2 – use the `src/` directory directly in your notebooks:
+use the `src/` directory directly in your notebooks:
 
 ```python
 import sys
